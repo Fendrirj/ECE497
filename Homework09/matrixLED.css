@@ -29,6 +29,12 @@ body {
 
 }
 
+.onRed {
+	border: 1px solid #ee0000;
+	background-color: red;
+
+}
+
 #i2cNum {
 	text-align: right; 
 	width:	3em;

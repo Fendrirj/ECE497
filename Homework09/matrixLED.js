@@ -2,6 +2,7 @@
     var firstconnect = true,
         i2cNum  = "0x70",
 	disp = [];
+	disp2=[];
 
 // Create a matrix of LEDs inside the <table> tags.
 var matrixData;
@@ -18,10 +19,19 @@ $('#matrixLED').append(matrixData);
 
 // Send one column when LED is clicked.
 function LEDclick(i, j) {
-//	alert(i+","+j+" clicked");
-    disp[i] ^= 0x1<<j;
+    if(disp[i]>>j&0x1 == 1){
+	disp[i] &= ~(0x1<<j);
+	disp2[i] |= (0x1<<j);
+    }
+    else if(disp2[i]>>j&0x1==1){
+	disp2[i] &= ~(0x1<<j);
+    }else{
+	disp[i] |= (0x1<<j);
+    }
     socket.emit('i2cset', {i2cNum: i2cNum, i: i, 
 			     disp: '0x'+disp[i].toString(16)});
+    socket.emit('i2cset', {i2cNum: i2cNum, i: (i+1/2), 
+			     disp: '0x'+disp2[i].toString(16)});
 //	socket.emit('i2c', i2cNum);
     // Toggle bit on display
     if(disp[i]>>j&0x1 === 1) {
@@ -70,6 +80,7 @@ function LEDclick(i, j) {
     function matrix(data) {
         var i, j;
         disp = [];
+	disp2=[];
         //        status_update("i2c: " + data);
         // Make data an array, each entry is a pair of digits
         data = data.split(" ");
@@ -77,18 +88,26 @@ function LEDclick(i, j) {
         // Every other pair of digits are Green. The others are red.
         // Ignore the red.
         // Convert from hex.
-        for (i = 0; i < data.length; i += 2) {
-            disp[i / 2] = parseInt(data[i], 16);
+        for (i = 0; i < data.length; i ++) {
+	    if(i%2==0){
+	        disp[i/2] = parseInt(data[i], 16);
+	    }
+	    else{
+		disp2[(i-1)/2] = parseInt(data[i], 16);
+	    } 
         }
         //        status_update("disp: " + disp);
         // i cycles through each column
         for (i = 0; i < disp.length; i++) {
             // j cycles through each bit
-            for (j = 0; j < 8; j++) {
+            for (j = 0; j < 8((disp[i] >> j) & 0x1) === 1; j++) {
                 if (((disp[i] >> j) & 0x1) === 1) {
                     $('#id' + i + '_' + j).addClass('on');
-                } else {
-                    $('#id' + i + '_' + j).removeClass('on');
+                } else if(((disp2[i] >> j) & 0x1) === 1){
+		     $('#id' + i + '_' + j).removeClass('on');
+		     $('#id' + i + '_' + j).addClass('onRed');  
+		}else{
+                    $('#id' + i + '_' + j).removeClass('onRed');
                 }
             }
         }
