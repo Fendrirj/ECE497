@@ -36,8 +36,12 @@ function LEDclick(i, j) {
     // Toggle bit on display
     if(disp[i]>>j&0x1 === 1) {
         $('#id'+i+'_'+j).addClass('on');
-    } else {
-        $('#id'+i+'_'+j).removeClass('on');
+    } else if (disp2[i]>>j&0x1 === 1){
+	$('#id'+i+'_'+j).removeClass('on');
+        $('#id'+i+'_'+j).addClass('onRed');
+    }
+      else {
+        $('#id'+i+'_'+j).removeClass('onRed');
     }
 }
 
@@ -100,13 +104,14 @@ function LEDclick(i, j) {
         // i cycles through each column
         for (i = 0; i < disp.length; i++) {
             // j cycles through each bit
-            for (j = 0; j < 8((disp[i] >> j) & 0x1) === 1; j++) {
+            for (j = 0; j < 8; j++) {
                 if (((disp[i] >> j) & 0x1) === 1) {
                     $('#id' + i + '_' + j).addClass('on');
-                } else if(((disp2[i] >> j) & 0x1) === 1){
-		     $('#id' + i + '_' + j).removeClass('on');
-		     $('#id' + i + '_' + j).addClass('onRed');  
-		}else{
+                }else if (((disp2[i] >> j) & 0x1) === 1){
+		    $('#id' + i + '_' + j).removeClass('on');
+		    $('#id' + i + '_' + j).addClass('onRed');
+		}
+		 else{
                     $('#id' + i + '_' + j).removeClass('onRed');
                 }
             }
