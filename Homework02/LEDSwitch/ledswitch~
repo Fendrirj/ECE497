@@ -1,0 +1,48 @@
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <poll.h>
+#include <signal.h>
+#include "gpio-utils.h"
+
+/*******************************
+* Global Variables
+********************************/
+int keepgoing = 1; //Set to 0 when ctrl-c is pressed
+
+void signal_handler(int sig){
+	printf("Cleaning up and exiting...\n");
+	keepgoing = 0;
+}
+
+int main(int argc, char** argv){
+	//Create an array to store GPIO FDs the switches are connected to
+	int switchGPIOs[4];
+	//Create an array to store GPIO FDs the LEDs are connected to
+	int ledGPIOs[4];
+		
+	struct pollfd fdset[2];
+
+	switchGPIOs[0] = gpio_fd_open(50,O_RDONLY);
+	switchGPIOs[0] = gpio_fd_open(51,O_RDONLY);
+	switchGPIOs[0] = gpio_fd_open(3,O_RDONLY);
+	switchGPIOs[0] = gpio_fd_open(2,O_RDONLY);
+
+	ledGPIOs[0] = gpio_fd_open(30, O_RDWR);
+	ledGPIOs[1] = gpio_fd_open(31, O_RDWR);	
+	ledGPIOs[2] = gpio_fd_open(48, O_RDWR);	
+	ledGPIOs[3] = gpio_fd_open(60, O_RDWR);
+
+	//Set signal callback for Ctrl-C
+	signal(SIGINT, signal_handler);
+	while(keepgoing){
+		memset((void*)fdset, 0, sizeof(fdset));
+		fdset[0].fd = STDIN_FILENO;
+		fdset[0].events = POLLIN;
+		
+		fdset[1].fd = gpio_fd;
+	}		
+}

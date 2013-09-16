@@ -1,0 +1,237 @@
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <poll.h>
+#include <termios.h>
+#include "sketch.h"
+#include "gpio-utils.h"
+
+/**********************************************
+ * Created by Robert Fendricks
+ *
+ * Code borrowed from the internet is documented where applicable
+ **********************************************/
+
+int keepgoing = 1;
+
+void signal_handler(int sig);
+void signal_handler(int sig){
+	printf("\nCleaning up and exiting...\n");
+	keepgoing = 0;
+}
+
+/*
+ * clearGrid will set all of the points on the board to zero
+ * except for the point where the sketcher is currently at. This
+ * gets set to 2.
+ */
+
+void clearGrid(int (*board)[width], point * p){
+	int i, j;
+	for(i=0; i<height; i++){
+		for(j=0; j<width; j++){
+			board[i][j] = 0;
+		}
+	}
+	board[p->y][p->x] = 2;
+}
+
+/*
+ * This prints the current board state to the terminal.
+ * a 2 in the board array indicates where the cursor currently is
+ * a 1 indicates where the cursor has been
+ * a 0 represents where the cursor hasn't yet been.
+ */
+
+void drawGrid(int (*board)[width]){
+	int i, j;
+	printf("\e[1;1H\e[2J"); //clear the terminal's screen
+	for(i=0; i<height; i++){
+		for(j=0; j<width ; j++){
+			if(board[i][j] == 2){
+				printf("O");
+			}
+			else if(board[i][j]==1){
+				printf("X");
+			}
+			else{
+				printf(".");
+			}
+		}
+		printf("\n");
+	}
+}
+
+void goUp(point * p, int (*board)[width]){
+	if(p->y ==0){
+		//We are at the top of the board, so do nothing
+	}
+	else{
+		board[p->y][p->x] = 1;
+		p->y --; //Moves up
+		board[p->y][p->x] = 2;
+	}
+}
+
+void goLeft(point * p, int (*board)[width]){
+	if(p->x == 0){
+		//We are at the leftmost part of the board, so do nothing
+	}
+	else{	
+		board[p->y][p->x] = 1;
+		p->x --; //moves left
+		board[p->y][p->x] = 2;
+	}
+}
+
+void goDown(point * p, int (*board)[width]){
+	if(p->y == height-1){
+		//WE are at the bottom of the board, so do nothing
+		}
+	else{
+		board[p->y][p->x] = 1;
+		p->y ++; //move down
+		board[p->y][p->x] = 2;
+	}
+
+}
+
+void goRight(point * p, int (*board)[width]){
+	if(p->x == width-1){
+		//We are at the rightmost part of the board, so do nothing
+		}
+	else{
+		board[p->y][p->x] = 1;
+		p->x ++; //move right
+		board[p->y][p->x] = 2;
+	}
+}
+
+/*
+ * This controls where the cursor moves to next.
+ * Press w to go up
+ * Press a to go left
+ * Press s to go down
+ * Press d to go right
+ */
+int control(struct pollfd * fdset, int * switchPorts, point * p, int (*board)[width]){
+	int value;
+	int redraw=0;
+
+	if(fdset[0].revents & POLLIN){
+		gpio_get_value(switchPorts[0], &value);
+		if(value){
+			goUp(p, board);
+			redraw=1;
+		}
+	}
+	if(fdset[1].revents & POLLIN){
+		gpio_get_value(switchPorts[1], &value);
+		if(value){
+			goLeft(p, board);
+			redraw =1;
+		}
+	}
+	if(fdset[2].revents & POLLIN){
+		gpio_get_value(switchPorts[2], &value);
+		if(!value){
+			goRight(p, board);
+			redraw=1;
+		}
+	}
+	if(fdset[3].revents & POLLIN){
+		gpio_get_value(switchPorts[3], &value);
+		if(!value){
+			goDown(p, board);
+			redraw=1;
+		}
+	}
+	return redraw;
+}
+
+
+
+/**
+ * I found this code on the internet at:
+ * https://groups.google.com/forum/#!topic/comp.os.linux.development/09C0_1pA3sc
+ * What this code does is it changes the behavior of the terminal so that instead of
+ * printing characters straight to the screen and waiting for the user to hit enter,
+ * it instead immediately gets fed to this program.
+ */
+
+
+unsigned char kbhit(){
+ 	struct termios argin, argout;
+	unsigned char ch;
+
+	tcgetattr(0, &argin);
+	argout = argin;
+	argout.c_lflag &= ~(ICANON);
+	argout.c_iflag &= ~(ICRNL);
+	argout.c_oflag &= ~(OPOST);
+	argout.c_cc[VMIN] = 1;
+	argout.c_cc[VTIME] = 0;
+	tcsetattr(0, TCSADRAIN, &argout);
+	read(0, &ch, 1);
+	tcsetattr(0,TCSADRAIN, &argin);
+	return ch;
+}
+
+int main(int argc, char** argv){
+	int switchGPIOFDs[4];
+	int switchPorts[4] = {50,51,3,2};
+	int nfds = 4;
+	struct pollfd fdset[5];
+	int i, rc;
+
+	unsigned char command; //This will track what keys are pressed during use
+
+	if(argc != 3){
+		printf("To use this program, please specify the height and width of the grid you want to draw on.\n");
+		exit(-1);
+	}
+	//height and width are global variables defined in the header
+	height = atoi(argv[1]);
+	width = atoi(argv[2]);
+	
+	//Setup the GPIOs
+	for(i=0; i<4; i++){
+		gpio_export(switchPorts[i]);
+		gpio_set_dir(switchPorts[i], "in");
+		//gpio_set_edge(switchPorts[i], "both");
+		switchGPIOFDs[i] = gpio_fd_open(switchPorts[i], O_RDONLY);
+	}
+
+	//set signal callback for Ctrl-C
+	signal(SIGINT, signal_handler);
+
+	int board[height][width]; //This will keep track of the state of the board
+	point p = {0,0}; //point is where the sketcher is currently at
+
+	clearGrid(board, &p);
+	drawGrid(board);
+	while(keepgoing){
+		memset((void*)fdset, 0, sizeof(fdset));
+		for(i=0; i<4; i++){
+			fdset[i].fd = switchGPIOFDs[i];
+			fdset[i].events = POLLIN;
+		}
+
+		
+		rc = poll(fdset, nfds, -1);
+		if(control(fdset, switchPorts, &p, board)){
+			drawGrid(board);
+		}
+		fflush(stdout);
+		usleep(200000);
+	}
+	
+	for(i=0; i<4; i++){
+		gpio_fd_close(switchGPIOFDs[i]);
+		gpio_unexport(switchPorts[i]);
+	}
+}
