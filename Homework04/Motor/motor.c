@@ -1,0 +1,213 @@
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <poll.h>
+#include <termios.h>
+#include "gpio-utils.h"
+
+#define MAX_BUF 64
+
+/**********************************************
+ * Created by Robert Fendricks
+ *
+ * Code borrowed from the internet is documented where applicable
+ **********************************************/
+
+int keepgoing = 1;
+
+void signal_handler(int sig);
+void signal_handler(int sig){
+	printf("\nCleaning up and exiting...\n");
+	keepgoing = 0;
+}
+
+//Code tooken from analog sample given to us by Dr. Yoder
+int analogIn(char * ain){
+	FILE *fp;
+	char ainPath[MAX_BUF];
+	char ainval[MAX_BUF];
+	
+	sprintf(ainPath, "/sys/devices/ocp.2/helper.14/%s",ain);
+	
+	if((fp = fopen(ainPath,"r"))== NULL){
+		printf("Can't open this pin, %s\n", ain);
+		return 1;
+	}
+	fgets(ainval, MAX_BUF, fp);
+	fclose(fp);
+	return atoi(ainval);
+
+}
+
+void updatePos(int * pos, int * currpos, int direction){
+	*pos = (*pos) + direction;
+        if(*pos > 3){
+		*pos = 0;
+	}
+	if(*pos < 0){
+		*pos = 3;
+	}	
+	if(*pos==0){
+		currpos[0]=1;
+		currpos[1]=1;
+		currpos[2]=0;
+		currpos[3]=0;
+	}
+	if(*pos==1){
+		currpos[0]=0;
+		currpos[1]=1;
+		currpos[2]=1;
+		currpos[3]=0;
+	}
+	if(*pos==2){
+		currpos[0]=0;
+		currpos[1]=0;
+		currpos[2]=1;
+		currpos[3]=1;
+	}
+	if(*pos==3){
+		currpos[0]=1;
+		currpos[1]=0;
+		currpos[2]=0;
+		currpos[3]=1;
+	}
+	if(*pos==4){
+		currpos[0]=0;
+		currpos[1]=0;
+		currpos[2]=1;
+		currpos[3]=1;
+	}
+	if(*pos==5){
+		currpos[0]=0;
+		currpos[1]=0;
+		currpos[2]=0;
+		currpos[3]=1;
+	}
+	if(*pos==6){
+		currpos[0]=1;
+		currpos[1]=0;
+		currpos[2]=0;
+		currpos[3]=1;
+	}
+	if(*pos==7){
+		currpos[0]=1;
+		currpos[1]=0;
+		currpos[2]=0;
+		currpos[3]=0;
+	}
+		
+}
+
+void changePos(int * pos, int * motorPorts, int * currPos, int direction){
+	int i;
+	updatePos(pos, currPos, direction);
+	for(i=0; i<4; i++){
+		gpio_set_value(motorPorts[i], currPos[i]);
+	}
+}
+
+void monitor(int reset, int * cw, int * ccw){
+	
+}
+
+int main(int argc, char** argv){
+	int wait = 200000;
+	int motorPorts[4] = {30,31,48,51};
+	int currPos[4] = {1,1,0,0};
+	char PT1[] = "AIN6";
+	char PT2[] = "AIN2";
+	int values[20];
+	int maxVal = 10000000; //arbitrily high number
+	int maxPos = -1;
+	int motorPos = -1;
+	int sensorPos=-1;
+	int direction;
+	int i, j, mode;
+
+	if(argc != 2){
+		printf("Please specify search mode (0) or track mode (1)\n");
+		return -1;
+	}
+
+	if(atoi(argv[1])==0){
+		mode =0;
+	}
+	else if (atoi(argv[1])==1){
+		mode =1;
+	}else{
+		printf("Invalid mode input. Either use 0 for search or 1 for track.\n");
+	}
+
+	//Setup the GPIOs
+	for(i=0; i<4; i++){
+		gpio_export(motorPorts[i]);
+		gpio_set_dir(motorPorts[i], "out");
+		//gpio_set_edge(motorPorts[i], "both");
+	}
+
+	//set signal callback for Ctrl-C
+	signal(SIGINT, signal_handler);
+	if(mode == 0){
+		direction = 1;
+		for(i=0; i<20 && keepgoing;i++){	
+			changePos(&motorPos, motorPorts, currPos, direction);
+			sensorPos= sensorPos + direction;
+			if(sensorPos>19){
+				sensorPos = 0;
+			}
+			if(sensorPos < 0){
+				sensorPos = 19;
+			}
+			values[sensorPos] = (analogIn(PT1)+analogIn(PT2))/2;
+			printf("Value = %d\n", values[sensorPos]);
+			if(values[sensorPos]< maxVal){
+				maxVal = values[sensorPos];
+				maxPos = sensorPos;
+			}
+			fflush(stdout);
+			usleep(wait);
+		}
+		direction = -1;
+		while(sensorPos != maxPos){
+			changePos(&motorPos, motorPorts, currPos, direction);
+			sensorPos = sensorPos + direction;
+			if(sensorPos>19){
+				sensorPos = 0;
+			}
+			if(sensorPos < 0){
+				sensorPos = 19;
+			}
+			usleep(wait);
+		}
+		
+	}
+	else{
+		
+		int clockwiseval, counterclockwiseval;
+		direction=1;
+		while (keepgoing){
+			
+			clockwiseval = analogIn(PT1);
+			counterclockwiseval = analogIn(PT2);
+			if(clockwiseval<1600 || counterclockwiseval < 1600){
+				if(clockwiseval < counterclockwiseval){
+					changePos(&motorPos, motorPorts, currPos, 1);
+				}else if(counterclockwiseval < clockwiseval){
+					changePos(&motorPos, motorPorts, currPos, -1);
+				}
+				
+			}
+			//printf("Val: %d   PrevVal: %d\n", val, prevVal);
+			printf("cwval: %d   ccwval: %d\n", clockwiseval, counterclockwiseval);
+			fflush(stdout);
+			usleep(500000);
+		}
+	}
+	for(i=0; i<4; i++){
+		gpio_unexport(motorPorts[i]);
+	}
+}
