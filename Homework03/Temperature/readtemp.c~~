@@ -1,0 +1,106 @@
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <poll.h>
+#include <termios.h>
+#include "gpio-utils.h"
+#include "i2c-dev.h"
+
+/**********************************************
+ * Created by Robert Fendricks
+ *
+ * Code borrowed from the internet is documented where applicable
+ **********************************************/
+
+int keepgoing = 1;
+
+void signal_handler(int sig){
+	printf("\nCleaning up and exiting...\n");
+	keepgoing = 0;
+}
+
+
+int main(int argc, char** argv){
+	int tempGPIOFDs[2];
+	int tempPorts[2] = {30, 60};
+	int nfds = 2;
+	struct pollfd fdset[2];
+	int i, rc;
+
+	//Setup temperature sensors
+	system("/home/root/Code/Temperature/readtemp.bash");
+	
+	//Setup the GPIOs
+	for(i=0; i<nfds; i++){
+		gpio_export(tempPorts[i]);
+		gpio_set_dir(tempPorts[i], "in");
+		//gpio_set_edge(switchPorts[i], "both");
+		tempGPIOFDs[i] = gpio_fd_open(tempPorts[i], O_RDONLY);
+	}
+
+	//set signal callback for Ctrl-C
+	signal(SIGINT, signal_handler);
+	signed int temperature;
+	unsigned int temp;
+	float tempFloat;
+	FILE * pipe;
+	char filename[20];
+	while(keepgoing){
+		memset((void*)fdset, 0, sizeof(fdset));
+		for(i=0; i<nfds; i++){
+			fdset[i].fd = tempGPIOFDs[i];
+			fdset[i].events = POLLIN;
+		}
+
+		rc = poll(fdset, nfds, -1);
+		if(fdset[0].revents & POLLIN){
+			gpio_get_value(tempPorts[0], &temperature);
+			if(temperature){
+				//The temperature is now below the threshold
+			}
+			 	//The temperature is above the threshold
+			else {
+				sprintf(filename, "/dev/i2c-1");
+				pipe = open(filename, O_RDWR);
+				ioctl(pipe, I2C_SLAVE, 0x48);
+				temp = i2c_smbus_read_byte_data(pipe, 0x00);
+				temp = (temp>>8) | (temp<<8);
+				tempFloat = (float)temp;
+				tempFloat = tempFloat/256.0;
+				printf("Hex: %x  Temp1: %f\n", temp, (tempFloat*1.8+32));
+			}
+		}
+
+		if(fdset[1].revents & POLLIN){
+			gpio_get_value(tempPorts[1], &temperature);
+			if(temperature){
+				//The temperature is now below the threshold
+			}
+			 	//The temperature is above the threshold
+			else {
+				sprintf(filename, "/dev/i2c-1");
+				pipe = open(filename, O_RDWR);
+				ioctl(pipe, I2C_SLAVE, 0x4a);
+				temp = i2c_smbus_read_byte_data(pipe, 0x00);
+				temp = (temp>>8) | (temp<<8);
+				tempFloat = (float)temp;
+				tempFloat = tempFloat/512.0;
+				printf("Hex: %x  Temp2: %f\n", temp, (tempFloat*1.8+32));
+
+				
+			}
+
+		}
+		fflush(stdout);
+		usleep(200000);
+	}
+	
+	for(i=0; i<nfds; i++){
+		gpio_fd_close(tempGPIOFDs[i]);
+		gpio_unexport(tempPorts[i]);
+	}
+}

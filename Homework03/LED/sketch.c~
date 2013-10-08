@@ -1,0 +1,318 @@
+/**********************************************
+ * Created by Robert Fendricks
+ *
+ * Code borrowed from the internet is documented where applicable
+ **********************************************/
+
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <poll.h>
+#include <termios.h>
+#include "sketch.h"
+#include "gpio-utils.h"
+#include "i2c-dev.h"
+#include "i2cbusses.h"
+
+#define BICOLOR
+#define POINTER 2
+
+static int check_funcs(int file) {
+	unsigned long funcs;
+	if(ioctl(file, I2C_FUNCS, &funcs) < 0){
+		fprintf(stderr, "Error: Could not get the adapter "
+				"functionality matrix: %s\n", strerror(errno));
+		return -1;
+	}
+
+	if(!(funcs & I2C_FUNC_SMBUS_WRITE_BYTE)) {
+		fprintf(stderr, MISSING_FUNC_FMT, "SMBus send byte");
+		return -1;
+	}
+	return 0;
+}
+
+//Writes block of data to the display
+static int write_block(int file, __u16 *data) {
+	int res;
+#ifdef BICOLOR
+	res = i2c_smbus_write_i2c_block_data(file, 0x00, 16,
+		(__u8 *)data);
+	return res;
+#else
+	int i;
+	__u16 block[I2C_SMBUS_BLOCK_MAX];
+	for(i=0; i<8; i++) {
+		block[i] = (data[i]&0xfe) >> 1 |
+			   (data[i]&0x01) << 7;
+	}
+	res = i2c_smbus_write_i2c_block_data(file, 0x00, 16,
+			(__u8 *) block);
+	return res;
+#endif
+}
+
+//Convert the double array that represents the board into a single array of hex values
+void convertBoard(int (*board)[width], __u16 *data){
+	int i, j;
+	__u16 temp;
+	for(i=0; i<width; i++){
+		temp = 0;
+		for(j=0; j<height; j++){
+			//If the spot on the board should be filled in, make it green
+			if(board[i][j] == 1){
+				temp = temp | (0x01<<j);
+			}
+			//If the spot on the board has the pointer on it, make it red
+			else if (board[i][j]==2){
+				temp = temp | (0x01<<(j+8));
+			}
+			//Else do nothing to the spot
+			
+		}
+		data[i] = temp;
+	}
+	for(i=0; i<width; i++){
+		printf("%d ", data[i]);
+	}
+	printf("\n");
+}
+
+int keepgoing = 1;
+
+void signal_handler(int sig);
+void signal_handler(int sig){
+	printf("\nCleaning up and exiting...\n");
+	keepgoing = 0;
+}
+
+/*
+ * clearGrid will set all of the points on the board to zero
+ * except for the point where the sketcher is currently at. This
+ * gets set to 2.
+ */
+
+void clearGrid(int (*board)[width], point * p){
+	int i, j;
+	for(i=0; i<height; i++){
+		for(j=0; j<width; j++){
+			board[i][j] = 0;
+		}
+	}
+	board[p->y][p->x] = POINTER;
+}
+
+/*
+ * This prints the current board state to the terminal.
+ * a 2 in the board array indicates where the cursor currently is
+ * a 1 indicates where the cursor has been
+ * a 0 represents where the cursor hasn't yet been.
+ */
+
+void drawGrid(int (*board)[width], int file){
+	__u16 convertedBoard[width];
+	convertBoard(board, convertedBoard);
+	write_block(file, convertedBoard);
+}
+
+void goUp(point * p, int (*board)[width]){
+	if(p->y ==0){
+		//We are at the top of the board, so do nothing
+	}
+	else{
+		board[p->y][p->x] = 1;
+		p->y --; //Moves up
+		board[p->y][p->x] = POINTER;
+	}
+}
+
+void goLeft(point * p, int (*board)[width]){
+	if(p->x == 0){
+		//We are at the leftmost part of the board, so do nothing
+	}
+	else{	
+		board[p->y][p->x] = 1;
+		p->x --; //moves left
+		board[p->y][p->x] = POINTER;
+	}
+}
+
+void goDown(point * p, int (*board)[width]){
+	if(p->y == height-1){
+		//WE are at the bottom of the board, so do nothing
+		}
+	else{
+		board[p->y][p->x] = 1;
+		p->y ++; //move down
+		board[p->y][p->x] = POINTER;
+	}
+
+}
+
+void goRight(point * p, int (*board)[width]){
+	if(p->x == width-1){
+		//We are at the rightmost part of the board, so do nothing
+		}
+	else{
+		board[p->y][p->x] = 1;
+		p->x ++; //move right
+		board[p->y][p->x] = POINTER;
+	}
+}
+
+/*
+ * This controls where the cursor moves to next.
+ * Press w to go up
+ * Press a to go left
+ * Press s to go down
+ * Press d to go right
+ */
+int control(struct pollfd * fdset, int * switchPorts, point * p, int (*board)[width]){
+	int value;
+	int redraw=0;
+
+	if(fdset[0].revents & POLLIN){
+		gpio_get_value(switchPorts[0], &value);
+		if(value){
+			goDown(p, board);
+			redraw=1;
+		}
+	}
+	if(fdset[1].revents & POLLIN){
+		gpio_get_value(switchPorts[1], &value);
+		if(value){
+			goLeft(p, board);
+			redraw =1;
+		}
+	}
+	if(fdset[2].revents & POLLIN){
+		gpio_get_value(switchPorts[2], &value);
+		if(!value){
+			goRight(p, board);
+			redraw=1;
+		}
+	}
+	if(fdset[3].revents & POLLIN){
+		gpio_get_value(switchPorts[3], &value);
+		if(!value){
+			goUp(p, board);
+			redraw=1;
+		}
+	}
+	return redraw;
+}
+
+
+
+/**
+ * I found this code on the internet at:
+ * https://groups.google.com/forum/#!topic/comp.os.linux.development/09C0_1pA3sc
+ * What this code does is it changes the behavior of the terminal so that instead of
+ * printing characters straight to the screen and waiting for the user to hit enter,
+ * it instead immediately gets fed to this program.
+ */
+
+
+unsigned char kbhit(){
+ 	struct termios argin, argout;
+	unsigned char ch;
+
+	tcgetattr(0, &argin);
+	argout = argin;
+	argout.c_lflag &= ~(ICANON);
+	argout.c_iflag &= ~(ICRNL);
+	argout.c_oflag &= ~(OPOST);
+	argout.c_cc[VMIN] = 1;
+	argout.c_cc[VTIME] = 0;
+	tcsetattr(0, TCSADRAIN, &argout);
+	read(0, &ch, 1);
+	tcsetattr(0,TCSADRAIN, &argin);
+	return ch;
+}
+
+int main(int argc, char** argv){
+	int switchGPIOFDs[4];
+	int switchPorts[4] = {50,51,3,2,30};
+	int nfds = 4;
+	struct pollfd fdset[5];
+	int i, rc, res, i2cbus, address, file;
+	char filename[20];
+	int force = 0;
+
+	system("/home/root/Code/Temperature/readtemp.bash");
+
+	unsigned char command; //This will track what keys are pressed during use
+	//height and width are global variables defined in the header
+	height = 8;
+	width = 8;
+	
+	//Setup the GPIOs
+	for(i=0; i<4; i++){
+		gpio_export(switchPorts[i]);
+		gpio_set_dir(switchPorts[i], "in");
+		//gpio_set_edge(switchPorts[i], "both");
+		switchGPIOFDs[i] = gpio_fd_open(switchPorts[i], O_RDONLY);
+	}
+
+	gpio_export(switchPorts[4]);
+	gpio_set_dir(switchPorts[4], "in");
+	//gpio_set_edge(switchPorts[4], "both");
+	switchGPIOFDs[i] = gpio_fd_open(switchPorts[4], O_RDONLY);
+
+
+
+	//set signal callback for Ctrl-C
+	signal(SIGINT, signal_handler);
+
+	int board[height][width]; //This will keep track of the state of the board
+	point p = {0,0}; //point is where the sketcher is currently at
+
+	//Now set up the i2c led matrix
+	i2cbus = lookup_i2c_bus("1");
+	address = parse_i2c_address("0x70");
+	file = open_i2c_dev(i2cbus, filename, sizeof(filename), 0);
+	if(file< 0
+	   || check_funcs(file)
+	   || set_slave_addr(file, address, force))
+		exit(1);
+	i2c_smbus_write_byte(file, 0x21);
+	i2c_smbus_write_byte(file, 0x81);
+	i2c_smbus_write_byte(file, 0xe7);
+
+	
+	clearGrid(board, &p);
+	drawGrid(board, file);
+	int alert;
+	while(keepgoing){
+		memset((void*)fdset, 0, sizeof(fdset));
+		for(i=0; i<5; i++){
+			fdset[i].fd = switchGPIOFDs[i];
+			fdset[i].events = POLLIN;
+		}
+
+		
+		rc = poll(fdset, nfds, -1);
+		if(control(fdset, switchPorts, &p, board)){
+			drawGrid(board, file);
+			fflush(stdout);
+			usleep(200000);
+		}
+		gpio_get_value(switchPorts[4], &alert);
+		if(!alert){
+			clearGrid(board, &p);
+			printf("Cleared\n");
+			fflush(stdout);
+			usleep(100000);
+		}
+		
+	}
+	
+	for(i=0; i<5; i++){
+		gpio_fd_close(switchGPIOFDs[i]);
+		gpio_unexport(switchPorts[i]);
+	}
+}
