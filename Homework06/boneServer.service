@@ -1,0 +1,11 @@
+[Unit]
+Description= Custom bonescript server
+
+[Service]
+Environment= NODE_PATH=/usr/lib/node_modules
+WorkingDirectory=/home/root/fendrirj/ECE497/Homework06/
+ExecStart=/usr/bin/node boneServer.js
+SyslogIdentifier=boneserver
+
+[Install]
+WantedBy=multi-user.target
