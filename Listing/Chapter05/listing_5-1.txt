@@ -1,0 +1,68 @@
+-----------------------------
+scripts/gcc: Error: The GCC ARM Cross Compiler you setup in system.sh (CC variable) is invalid.
+-----------------------------
+-----------------------------
+scripts/gcc: Using: arm-linux-gnueabihf-gcc (crosstool-NG linaro-1.13.1-4.7-2013.04-20130415 - Linaro GCC 2013.04) 4.7.3 20130328 (prerelease)
+Copyright (C) 2012 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+-----------------------------
+debug: CC=/home/rj/linux_kernal/linux-dev/dl/gcc-linaro-arm-linux-gnueabihf-4.7-2013.04-20130415_linux/bin/arm-linux-gnueabihf-
+scripts/kconfig/mconf Kconfig
+[?1049h[1;24r(B[m[4l[?7h[39;49m[?1h=[?1h=[?1h=[39;49m[37m[40m[H[2J[24d(B[0;1m[36m[44m[J[H .config - Linux/arm 3.8.13 Kernel Configuration[K
+ (0[0;1m[36m[44mqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq(B[0;1m[36m[44m[K
+[K
+[77G[1K [30m[40m  [36m[44m[K
+[1K [30m[40m  [36m[44m[K
+[1K [30m[40m  [36m[44m[K
+[1K [30m[40m  [36m[44m[K
+[1K [30m[40m  [36m[44m[K
+[5G[1K (B[0m[30m[47m    (B[0;1m[37m[44m    [33m[44mG[37m[44meneral setup  --->(B[0m[30m[47m[42X[75G(B[0;1m[36m[44m   [30m[40m  [36m[44m[K
+[5G[1K [37m[47m[69X[75G[36m[44m   [30m[40m  [36m[44m[K
+[5G[1K [37m[47m[69X[75G[36m[44m   [30m[40m  [36m[44m[K
+[5G[1K [37m[47m[69X[75G[36m[44m   [30m[40m  [36m[44m[K
+[5G[1K [37m[47m[69X[75G[36m[44m   [30m[40m  [36m[44m[K
+[5G[1K [37m[47m[69X[75G[36m[44m   [30m[40m  [36m[44m[K
+[5G[1K [37m[47m[69X[75G[36m[44m   [30m[40m  [36m[44m[K
+[5G[1K [37m[47m[69X[75G[36m[44m   [30m[40m  [36m[44m[K
+[5G[1K [37m[47m[69X[75G[36m[44m   [30m[40m  [36m[44m[K
+[5G[1K [37m[47m[69X[75G[36m[44m   [30m[40m  [36m[44m[K
+[1K [30m[40m  [36m[44m[K
+[1K [30m[40m  [36m[44m[K
+[1K [30m[40m  [36m[44m[K
+[1K [30m[40m  [36m[44m[K
+    [30m[40m[75X[80G[36m[44m[K[9;11H(B[m[39;49m[37m[40m
+[6G[30m[47m    [30m[47m[*] (B[0;1m[34m[47mE(B[0m[30m[47mnable loadable module support  --->[30m[47m[25X[10;15H(B[m[39;49m[37m[40m
+[6G[30m[47m    [30m[47m[*] (B[0;1m[34m[47mE(B[0m[30m[47mnable the block layer  --->[30m[47m[33X[11;15H(B[m[39;49m[37m[40m
+[6G[30m[47m    [30m[47m    (B[0;1m[34m[47mS(B[0m[30m[47mystem Type  --->[30m[47m[44X[12;15H(B[m[39;49m[37m[40m
+[6G[30m[47m    [30m[47m    (B[0;1m[34m[47mB(B[0m[30m[47mus support  --->[30m[47m[44X[13;15H(B[m[39;49m[37m[40m
+[6G[30m[47m    [30m[47m    (B[0;1m[34m[47mK(B[0m[30m[47mernel Features  --->[30m[47m[40X[14;15H(B[m[39;49m[37m[40m
+[6G[30m[47m    [30m[47m    (B[0;1m[34m[47mB(B[0m[30m[47moot options  --->[30m[47m[43X[15;15H(B[m[39;49m[37m[40m
+[6G[30m[47m    [30m[47m    (B[0;1m[34m[47mC(B[0m[30m[47mPU Power Management  --->[30m[47m[35X[16;15H(B[m[39;49m[37m[40m
+[6G[30m[47m    [30m[47m    (B[0;1m[34m[47mF(B[0m[30m[47mloating point emulation  --->[30m[47m[31X[17;15H(B[m[39;49m[37m[40m
+[6G[30m[47m    [30m[47m    (B[0;1m[34m[47mU(B[0m[30m[47mserspace binary formats  --->[30m[47m[31X[18;15H(B[m[39;49m[37m[40m[3;3H(0[0;1m[37m[47mlqqqqqqqqqqqqqqqqq(B[0;1m[34m[47m Linux/arm 3.8.13 Kernel Configuration (0[0;1m[37m[47mqqqqqqqqqqqqqqqqq(0[0m[30m[47mk(B(B[m[39;49m[37m[40m
+[3G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m  Arrow keys navigate the menu.  <Enter> selects submenus --->.          (0[0m[30m[47mx(B(B[m[39;49m[37m[40m
+[3G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m  Highlighted letters are hotkeys.  Pressing <Y> includes, <N> excludes, (0[0m[30m[47mx(B(B[m[39;49m[37m[40m
+[3G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m  <M> modularizes features.  Press <Esc><Esc> to exit, <?> for Help, </> (0[0m[30m[47mx(B(B[m[39;49m[37m[40m
+[3G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m  for Search.  Legend: [*] built-in  [ ] excluded  <M> module  < >       (0[0m[30m[47mx(B(B[m[39;49m[37m[40m
+[3G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mlqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq(0[0;1m[37m[47mk(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m
+[3G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m[75G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m
+[3G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m[75G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m
+[3G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m[75G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m
+[3G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m[75G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m
+[3G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m[75G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m
+[3G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m[75G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m
+[3G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m[75G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m
+[3G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m[75G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m
+[3G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m[75G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m
+[3G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m[75G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m
+[3G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m (0[0m[30m[47mm(0[0;1m[37m[47mqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj(B[0m[30m[47m (0[0m[30m[47mx(B(B[m[39;49m[37m[40m
+[3G(0[0m[30m[47m(0[0;1m[37m[47mtqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq(0[0m[30m[47mu(B(B[m[39;49m[37m[40m
+[3G(0[0m[30m[47m(0[0;1m[37m[47mx(B[0m[30m[47m[73X[77G(0[0m[30m[47mx(B(B[m[39;49m[37m[40m
+[3G(0[0m[30m[47m(0[0;1m[37m[47mm(0[0m[30m[47mqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj(B(B[m[39;49m[37m[40m[19;10H(0[0m[30m[47m(B(B[m[39;49m[37m[40m(B[0;1m[32m[47mv(+)[76G(B[m[39;49m[37m[40m[21;24H(B[0;1m[37m[44m<[33m[44mS[37m[44melect[37m[44m>(B[0m[30m[47m    [30m[47m<(B[0;1m[30m[47m (B[0m[31m[47mE(B[0;1m[30m[47mxit (B[0m[30m[47m>[30m[47m    [30m[47m<(B[0;1m[30m[47m (B[0m[31m[47mH(B[0;1m[30m[47melp (B[0m[30m[47m>[21;25H(B[m[39;49m[37m[40m[9;11H[?1h=[17d(B[0;1m[36m[44m[J[3d[K
+[K
+[K
+[K
+[K
+[K
+[K[10;10H[1K (0[0;1m[37m[47mlqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq(0[0m[30m[47mk(B[0;1m[36m[44m[K[11;10H[1K (0[0;1m[37m[47mx(B[0m[30m[47m  Do you wish to save your new configuration ? <ESC><ESC> (0[0m[30m[47mx(B[0;1m[30m[40m  [36m[44m[K[12;10H[1K (0[0;1m[37m[47mx(B[0m[30m[47m  to continue.     [12;69H (0[0m[30m[47mx(B[0;1m[30m[40m  [36m[44m[K[13;10H[1K (0[0;1m[37m[47mtqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq(0[0m[30m[47mu(B[0;1m[30m[40m  [36m[44m[K[14;10H[1K (0[0;1m[37m[47mx(B[0m[30m[47m[19X[14;31H(B[0;1m[37m[44m<[37m[44m [33m[44mY[37m[44mes [37m[44m>[44G(B[0m[30m[47m<(B[0;1m[30m[47m  (B[0m[31m[47mN(B[0;1m[30m[47mo  (B[0m[30m[47m>[14;69H[30m[47m (0[0m[30m[47mx(B[0;1m[30m[40m  [36m[44m[K[15;10H[1K (0[0;1m[37m[47mm(0[0m[30m[47mqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj(B[0;1m[30m[40m  [36m[44m[K[16;12H[1K [30m[40m[58X[16;71H  [36m[44m[K[14;32H(B[m[39;49m[37m[40m
