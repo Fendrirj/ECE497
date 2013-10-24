@@ -1,0 +1,154 @@
+From 94766cb43cd7ea93ef4a04d5b3bd8e1dc93f2fb7 Mon Sep 17 00:00:00 2001
+From: Robert Fendricks <fendrirj@rose-hulman.edu>
+Date: Thu, 24 Oct 2013 01:00:19 -0400
+Subject: [PATCH 1/3] Files for hello1 kernel module
+
+---
+ drivers/char/Kconfig           |  7 +++++++
+ drivers/char/Makefile          |  1 +
+ drivers/char/examples/Makefile |  1 +
+ drivers/char/examples/hello1.c | 18 ++++++++++++++++++
+ 4 files changed, 27 insertions(+)
+ create mode 100644 drivers/char/examples/Makefile
+ create mode 100644 drivers/char/examples/hello1.c
+
+diff --git a/drivers/char/Kconfig b/drivers/char/Kconfig
+index 72bedad..9eb61fa 100644
+--- a/drivers/char/Kconfig
++++ b/drivers/char/Kconfig
+@@ -6,6 +6,13 @@ menu "Character devices"
+ 
+ source "drivers/tty/Kconfig"
+ 
++config EXAMPLES
++	tristate "Enable Examples"
++	default m
++	help
++	  Enable compulation option for embedded linux Primer
++	  driver examples
++
+ config DEVKMEM
+ 	bool "/dev/kmem virtual device support"
+ 	default y
+diff --git a/drivers/char/Makefile b/drivers/char/Makefile
+index 7ff1d0d..917aa65 100644
+--- a/drivers/char/Makefile
++++ b/drivers/char/Makefile
+@@ -52,6 +52,7 @@ obj-$(CONFIG_TELCLOCK)		+= tlclk.o
+ obj-$(CONFIG_MWAVE)		+= mwave/
+ obj-$(CONFIG_AGP)		+= agp/
+ obj-$(CONFIG_PCMCIA)		+= pcmcia/
++obj-$(CONFIG_EXAMPLES)		+= examples/
+ 
+ obj-$(CONFIG_HANGCHECK_TIMER)	+= hangcheck-timer.o
+ obj-$(CONFIG_TCG_TPM)		+= tpm/
+diff --git a/drivers/char/examples/Makefile b/drivers/char/examples/Makefile
+new file mode 100644
+index 0000000..18a41b1
+--- /dev/null
++++ b/drivers/char/examples/Makefile
+@@ -0,0 +1 @@
++obj-$(CONFIG_EXAMPLES) += hello.o
+diff --git a/drivers/char/examples/hello1.c b/drivers/char/examples/hello1.c
+new file mode 100644
+index 0000000..47c0eb3
+--- /dev/null
++++ b/drivers/char/examples/hello1.c
+@@ -0,0 +1,18 @@
++#include <linux/module.h>
++
++static int __init hello_init(void){
++	printk(KERN_INFO "Hello Example init\n");
++	
++	return 0;
++}
++
++static void __exit hello_exit(void){
++	printk("Hello Example Exit\n");
++}
++
++module_init(hello_init);
++module_exit(hello_exit);
++
++MODULE_AUTHOR("Robert Fendricks");
++MODULE_DESCRIPTION("Hello World Example");
++MODULE_LICENSE("GPL");
+-- 
+1.8.1.2
+
+
+From 69c1241e71ed31f8fa209761a6e5b4672edb6f1f Mon Sep 17 00:00:00 2001
+From: Robert Fendricks <fendrirj@rose-hulman.edu>
+Date: Thu, 24 Oct 2013 13:42:37 -0400
+Subject: [PATCH 2/3] Changed hello1.c to except a parameter
+
+---
+ drivers/char/examples/Makefile | 2 +-
+ drivers/char/examples/hello1.c | 8 ++++++--
+ 2 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/char/examples/Makefile b/drivers/char/examples/Makefile
+index 18a41b1..ffda336 100644
+--- a/drivers/char/examples/Makefile
++++ b/drivers/char/examples/Makefile
+@@ -1 +1 @@
+-obj-$(CONFIG_EXAMPLES) += hello.o
++obj-$(CONFIG_EXAMPLES) += hello1.o
+diff --git a/drivers/char/examples/hello1.c b/drivers/char/examples/hello1.c
+index 47c0eb3..b1c2f40 100644
+--- a/drivers/char/examples/hello1.c
++++ b/drivers/char/examples/hello1.c
+@@ -1,8 +1,12 @@
+ #include <linux/module.h>
+ 
++static int debug_enable = 0;
++module_param(debug_enable, int, 0);
++MODULE_PARAM_DESC(debug_enable, "Enable module debug mode.");
++
+ static int __init hello_init(void){
+-	printk(KERN_INFO "Hello Example init\n");
+-	
++	printk(KERN_INFO "Hello Example init - debug mode is %s\n",
++			debug_enable ? "enabled" : "disabled");	
+ 	return 0;
+ }
+ 
+-- 
+1.8.1.2
+
+
+From 3d6e0c969c9b013fc4f64cd58f4bbcb001ba65e0 Mon Sep 17 00:00:00 2001
+From: Robert Fendricks <fendrirj@rose-hulman.edu>
+Date: Thu, 24 Oct 2013 13:58:39 -0400
+Subject: [PATCH 3/3] Update
+
+---
+ drivers/char/examples/hello1.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/char/examples/hello1.c b/drivers/char/examples/hello1.c
+index b1c2f40..d993d7e 100644
+--- a/drivers/char/examples/hello1.c
++++ b/drivers/char/examples/hello1.c
+@@ -1,12 +1,15 @@
+ #include <linux/module.h>
+ 
+ static int debug_enable = 0;
++static int foo = 0;
+ module_param(debug_enable, int, 0);
+-MODULE_PARAM_DESC(debug_enable, "Enable module debug mode.");
++module_param(foo, int, 0);
++MODULE_PARAM_DESC(debug_enable);
+ 
+ static int __init hello_init(void){
+-	printk(KERN_INFO "Hello Example init - debug mode is %s\n",
+-			debug_enable ? "enabled" : "disabled");	
++	printk(KERN_INFO "Hello Example init - debug mode is %s and the foo mode is %s\n",
++			debug_enable ? "enabled" : "disabled",
++			foo ? "foo" : "bar");	
+ 	return 0;
+ }
+ 
+-- 
+1.8.1.2
+
